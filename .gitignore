@@ -1,1 +1,5 @@
-tensorflow_practice.Rproj
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.httr-oauth
