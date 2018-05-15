@@ -1,0 +1,10 @@
+"0","mnist <- dataset_mnist()"
+"2","/Users/datateam/.virtualenvs/r-tensorflow/lib/python2.7/site-packages/h5py/__init__.py:36: FutureWarning: Conversion of the second argument of issubdtype from `float` to `np.floating` is deprecated. In future, it will be treated as `np.float64 == np.dtype(float).type`.
+  from ._conv import register_converters as _register_converters
+"
+"2","Using TensorFlow backend.
+"
+"0","x_train <- mnist$train$x"
+"0","y_train <- mnist$train$y"
+"0","x_test <- mnist$test$x"
+"0","y_test <- mnist$test$y"

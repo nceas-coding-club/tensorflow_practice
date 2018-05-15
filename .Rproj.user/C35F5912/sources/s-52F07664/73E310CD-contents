@@ -1,0 +1,122 @@
+---
+title: "Getting Started with Machine Learning"
+author: "Emily O'Dean"
+date: "5/15/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The tensorflow library contains a number of APIs which can be used for ML. 
+https://tensorflow.rstudio.com/
+
+Example below obtained from https://keras.rstudio.com/
+
+- Keras - high level neural networks API, enables fast experimentation
+- Estimator - implementation of many different model types, more flexible for custom estimators
+- Core - lowest level API for most flexible implementation
+
+We'll focus on Keras since it's the easiest to learn and use. 
+Keras can build a number of different models including:
+- Convoluted Neural Networks (for analyzing images)
+- Recurrent Neural Networks
+
+Other links/resources
+- [Data camp Keras](https://www.datacamp.com/community/tutorials/keras-r-deep-learning)
+- [Keras vignettes](https://cran.r-project.org/web/packages/keras/vignettes/)
+- [Tensorflow gallery of examples](https://tensorflow.rstudio.com/learn/gallery.html)
+
+First, install the keras package
+```{r, eval=FALSE}
+install.packages("keras")
+
+library(keras)
+install_keras()
+```
+
+We'll first look at recognizing digits that are hand-written. We'll set aside data to both train the algorithm and then test it afterwords. 
+
+```{r}
+library(keras)
+mnist <- dataset_mnist()
+x_train <- mnist$train$x
+y_train <- mnist$train$y
+x_test <- mnist$test$x
+y_test <- mnist$test$y
+```
+
+The images are currently stored as a 3-D array (images,width,height) of grayscale values. We need to convert to a single dimension to run through our ML. 
+
+```{r}
+# reshape
+x_train <- array_reshape(x_train, c(nrow(x_train), 784))
+x_test <- array_reshape(x_test, c(nrow(x_test), 784))
+# rescale
+x_train <- x_train / 255
+x_test <- x_test / 255
+```
+
+The y data is an integer vector with values ranging from 0 to 9. To prepare this data for training we one-hot encode (just changing categorical features to a format that works better for classification/regression) the vectors into binary class matrices using the Keras to_categorical() function:
+
+```{r}
+y_train <- to_categorical(y_train, 10)
+y_test <- to_categorical(y_test, 10)
+```
+
+The core data structure of Keras is a model, a way to organize layers. The simplest type of model is the Sequential model, a linear stack of layers.
+We begin by creating a sequential model and then adding layers using the pipe (%>%) operator:
+```{r}
+model <- keras_model_sequential() 
+model %>% 
+  layer_dense(units = 256, activation = 'relu', input_shape = c(784)) %>% 
+  layer_dropout(rate = 0.4) %>% 
+  layer_dense(units = 128, activation = 'relu') %>%
+  layer_dropout(rate = 0.3) %>%
+  layer_dense(units = 10, activation = 'softmax')
+```
+
+Next, compile the model (basically just configure the model for training) with appropriate loss function, optimizer, and metrics:
+
+An optimizer. This could be the string identifier of an existing optimizer (e.g. as “rmsprop” or “adagrad”) or a call to an optimizer function (e.g. optimizer_sgd()).
+
+A loss function. This is the objective that the model will try to minimize. It can be the string identifier of an existing loss function (e.g. “categorical_crossentropy” or “mse”) or a call to a loss function (e.g. loss_mean_squared_error()).
+
+A list of metrics. For any classification problem you will want to set this to metrics = c('accuracy'). A metric could be the string identifier of an existing metric or a call to metric function (e.g. metric_binary_crossentropy()).
+
+Check out https://cran.r-project.org/web/packages/keras/vignettes/sequential_model.html for more info
+
+```{r}
+model %>% compile(
+  loss = 'categorical_crossentropy',
+  optimizer = optimizer_rmsprop(),
+  metrics = c('accuracy')
+)
+```
+
+Use the fit() function to train the model for 30 epochs using batches of 128 images:
+
+```{r}
+history <- model %>% fit(
+  x_train, y_train, 
+  epochs = 30, batch_size = 128, 
+  validation_split = 0.2
+)
+```
+
+The history object returned by fit() includes loss and accuracy metrics which we can plot:
+
+```{r, echo=FALSE}
+plot(history)
+```
+
+Evaluate the model’s performance on the test data:
+```{r}
+model %>% evaluate(x_test, y_test)
+```
+
+Generate predictions based on new data
+```{r}
+model %>% predict_classes(x_test)
+```
